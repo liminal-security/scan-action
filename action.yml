@@ -1,0 +1,17 @@
+name: 'Scan PR using Entro'
+description: 'Scan PR using Entro security scan API'
+inputs:
+  api-endpoint:
+    description: 'Entro API endpoint'
+    required: true
+    default: 'https://api.entro.security'
+  api-token:
+    description: 'Entro API token'
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+
+  env:
+    ENTRO_API_ENDPOINT: ${{ inputs.api-endpoint }}
+    ENTRO_TOKEN: ${{ inputs.api-token }}
