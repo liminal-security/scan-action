@@ -1,0 +1,6 @@
+# pack-refs with: peeled fully-peeled sorted 
+b266a79203424477f91b0c87539304a563f6e49b refs/remotes/origin/fetch-depth
+f619c5efa6e3a050f00c9b886fa9d56785024553 refs/remotes/origin/gh-action
+cf79a0c4802ab43e6a247ecc1d68d0ba59998133 refs/remotes/origin/main
+8c4c708cb100ce0f2a37a66188ed3c7512aa9a9f refs/remotes/origin/new-pr
+539533aab24270f6201fcdd5aa25f6c16662ee58 refs/remotes/origin/notes
