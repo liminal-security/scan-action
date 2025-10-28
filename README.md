@@ -25,7 +25,7 @@ jobs:
           fetch-depth: ${{ env.PR_FETCH_DEPTH }}
 
       - name: 'Scan for secrets'
-        uses: liminal-security/scan-action@v1
+        uses: liminal-security/scan-action@v1.0.0
         with:
           api-endpoint: ${{ secrets.API_ENDPOINT }}
           api-token: ${{ secrets.API_KEY }}
