@@ -83,13 +83,95 @@ Found 3 secrets in commit 12fd1b3
 ...
 ```
 
+## Error: Missing or Invalid Credentials
+
+### Problem: "unsupported protocol scheme" or similar errors
+
+**Symptoms:**
+```
+error scanning ...: scan request failed: POST v2/scan giving up after 1 attempt(s): 
+Post "v2/scan": unsupported protocol scheme ""
+```
+
+### Problem: Configuration validation errors
+
+With the latest version, you'll see detailed validation errors if your configuration is wrong:
+
+```
+❌ ERROR: ENTRO_TOKEN environment variable is empty
+❌ ERROR: ENTRO_API_ENDPOINT is not a valid URL: not-a-url
+❌ ERROR: ENTRO_TOKEN contains template syntax - secret is not being substituted
+```
+
+The action now validates:
+- ✅ Environment variables exist and aren't empty
+- ✅ API endpoint is a valid HTTP/HTTPS URL
+- ✅ Token doesn't contain template syntax (means secret wasn't substituted)
+- ✅ Token isn't a placeholder value
+- ✅ Token has reasonable length
+
+### Solution
+
+Follow the detailed instructions shown in the error output:
+
+**Step 1: Create GitHub Secrets**
+1. Go to your repository Settings → Secrets and variables → Actions
+2. Create these secrets:
+   - Name: `API_ENDPOINT`, Value: `https://api.entro.security`
+   - Name: `API_KEY`, Value: your actual Entro API token from [here](https://app.entro.security/admin/settings?tab=api-keys)
+
+**Step 2: Reference Them in Your Workflow**
+```yaml
+- name: 'Scan for secrets'
+  uses: liminal-security/scan-action@v1.0.2
+  with:
+    api-endpoint: ${{ secrets.API_ENDPOINT }}  # Must match secret name!
+    api-token: ${{ secrets.API_KEY }}          # Must match secret name!
+```
+
+**Important:** 
+- The secret names must match **exactly**. If your secret is named `API_KEY` in GitHub, you must use `${{ secrets.API_KEY }}` in the workflow (not `API_TOKEN`, `ENTRO_TOKEN`, or anything else).
+- Secrets must be in **Repository secrets** (not Environment secrets). Environment secrets require additional workflow configuration and won't work by default.
+
+## Error: ENTRO_TOKEN is empty (length: 0)
+
+**Problem:** Debug output shows:
+```
+ENTRO_TOKEN: [SET] (length: 0)
+```
+
+**Common Causes:**
+
+1. **Environment secrets vs Repository secrets** (most common!)
+   - If your secret is in **Environment secrets**, the workflow can't access it by default
+   - **Solution:** Move the secret to **Repository secrets**:
+     - Go to Settings → Secrets and variables → Actions
+     - Switch to the **Secrets** tab (not **Environment secrets**)
+     - Create the secret there
+
+2. **Secret value is actually empty**
+   - The secret exists but has no value
+   - **Solution:** Update the secret and paste your actual API token
+
+3. **Whitespace issues**
+   - The secret value has trailing newlines or is just spaces
+   - **Solution:** Delete and recreate the secret, being careful when pasting
+
 ## Still Not Working?
 
-With the latest version, if no commits are found, you'll see a helpful warning:
+With the latest version, you'll see helpful error messages:
+
+**No commits found:**
 ```
 ⚠️  WARNING: No commits found to scan!
 This usually means your checkout fetch-depth is too shallow.
 ```
 
-Make sure you're following **both** checkout steps shown above.
+**Missing credentials:**
+```
+❌ ERROR: ENTRO_TOKEN environment variable is empty
+Make sure your workflow is passing the value correctly...
+```
+
+Make sure you're following **all** steps in the example workflow.
 
