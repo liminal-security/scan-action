@@ -9,9 +9,18 @@ inputs:
     description: 'Entro API token'
     required: true
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
-
-  env:
-    ENTRO_API_ENDPOINT: ${{ inputs.api-endpoint }}
-    ENTRO_TOKEN: ${{ inputs.api-token }}
+  using: 'composite'
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+    
+    - name: Run scanner
+      shell: bash
+      env:
+        ENTRO_API_ENDPOINT: ${{ inputs.api-endpoint }}
+        ENTRO_TOKEN: ${{ inputs.api-token }}
+      run: |
+        cd ${{ github.action_path }}
+        go run . ${{ github.workspace }}
