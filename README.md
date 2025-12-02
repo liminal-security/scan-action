@@ -72,7 +72,23 @@ Where `N` should equal the number of commits in your PR + 1 (not `--depth=1`).
 
 ### Inputs:
 
-1. `api-endpoint` Entro API endpoint usually `https://api.entro.security`
-2. `api-token` Entro API token can be created at [settings page](https://app.entro.security/admin/settings?tab=api-keys).
+1. `api-endpoint` - Entro API endpoint (default: `https://api.entro.security`)
+2. `api-token` - Entro API token (create at [settings page](https://app.entro.security/admin/settings?tab=api-keys))
+3. `fail-on-error` - Fail workflow on API errors (default: `false`)
+   - `false` (default): Log errors and continue scanning other commits
+   - `true`: Stop and fail the workflow on first API error
+
+### Example with Strict Mode:
+
+If you want the workflow to fail when API errors occur (e.g., network issues, API downtime):
+
+```yaml
+- name: 'Scan for secrets'
+  uses: liminal-security/scan-action@v1.0.2
+  with:
+    api-endpoint: ${{ secrets.API_ENDPOINT }}
+    api-token: ${{ secrets.API_KEY }}
+    fail-on-error: true  # Enable strict mode
+```
 
 

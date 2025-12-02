@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -24,20 +25,35 @@ func main() { //nolint:funlen
 		os.Exit(255)
 	}
 
+	// Validate configuration
 	getEnvVar := func(key string) string {
 		val, ok := os.LookupEnv(key)
-		if !ok {
-			fmt.Printf("%s not set\n", key)
+		if !ok || val == "" {
+			fmt.Printf("Error: %s is not set\n", key)
+			fmt.Printf("Add it to your workflow:\n")
+			fmt.Printf("  with:\n")
+			fmt.Printf("    api-endpoint: ${{ secrets.API_ENDPOINT }}\n")
+			fmt.Printf("    api-token: ${{ secrets.API_KEY }}\n")
 			os.Exit(255)
-		} else {
-			return val
 		}
-
-		return ""
+		return val
 	}
 
 	entroAPIEndpoint := getEnvVar("ENTRO_API_ENDPOINT")
 	entroToken := getEnvVar("ENTRO_TOKEN")
+
+	// Validate URL format
+	if _, err := url.Parse(entroAPIEndpoint); err != nil {
+		fmt.Printf("Error: Invalid API endpoint URL: %s\n", entroAPIEndpoint)
+		os.Exit(255)
+	}
+
+	// Check if strict mode is enabled
+	failOnError := false
+	if failOnErrorStr := os.Getenv("ENTRO_FAIL_ON_ERROR"); failOnErrorStr == "true" {
+		failOnError = true
+		fmt.Println("Strict mode: Will fail on API errors")
+	}
 
 	entroClient := entro.NewClient(entroAPIEndpoint, entroToken)
 
@@ -66,14 +82,9 @@ func main() { //nolint:funlen
 	}
 
 	if len(commits) == 0 {
-		fmt.Println("⚠️  WARNING: No commits found to scan!")
-		fmt.Println("This usually means your checkout fetch-depth is too shallow.")
-		fmt.Println("Please follow the setup instructions in the README:")
-		fmt.Println("  https://github.com/liminal-security/scan-action#example")
-		fmt.Println()
-		fmt.Println("You need to:")
-		fmt.Println("  1. Calculate PR commit count: PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))")
-		fmt.Println("  2. Use it in checkout: fetch-depth: ${{ env.PR_FETCH_DEPTH }}")
+		fmt.Println("Warning: No commits found to scan")
+		fmt.Println("Your checkout is too shallow (using fetch-depth: 1)")
+		fmt.Println("See: https://github.com/liminal-security/scan-action#example")
 		os.Exit(0)
 	}
 
@@ -87,8 +98,11 @@ func main() { //nolint:funlen
 
 		resp, err := entroClient.Scan(ctx, r)
 		if err != nil {
-			fmt.Printf("error scanning %s: %s\n", commit.Hash, err)
-
+			fmt.Printf("Error scanning %s: %s\n", commit.Hash, err)
+			if failOnError {
+				fmt.Println("Strict mode enabled: Failing due to API error")
+				os.Exit(1)
+			}
 			continue
 		}
 

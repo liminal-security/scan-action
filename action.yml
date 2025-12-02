@@ -8,6 +8,10 @@ inputs:
   api-token:
     description: 'Entro API token'
     required: true
+  fail-on-error:
+    description: 'Fail the workflow if API errors occur during scanning'
+    required: false
+    default: 'false'
 runs:
   using: 'composite'
   steps:
@@ -21,6 +25,7 @@ runs:
       env:
         ENTRO_API_ENDPOINT: ${{ inputs.api-endpoint }}
         ENTRO_TOKEN: ${{ inputs.api-token }}
+        ENTRO_FAIL_ON_ERROR: ${{ inputs.fail-on-error }}
       run: |
         cd ${{ github.action_path }}
         go run . ${{ github.workspace }}
