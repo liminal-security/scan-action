@@ -66,6 +66,7 @@ func main() { //nolint:funlen
 	}
 
 	for _, commit := range commits {
+		fmt.Printf("Scanning commit %s\n", commit.Hash)
 		r := &entro.ScanReq{
 			Data: commit.String(),
 		}
@@ -78,6 +79,7 @@ func main() { //nolint:funlen
 		}
 
 		if resp.TotalCount > 0 {
+			fmt.Printf("Found %d secrets in commit %s\n", resp.TotalCount, commit.Hash)
 			for _, res := range resp.Results {
 				file, err := commit.GetFileNameByLine(res.Line)
 				if err != nil {
@@ -92,6 +94,8 @@ func main() { //nolint:funlen
 					commit:   commit.Hash,
 				})
 			}
+		} else {
+			fmt.Printf("No secrets found in commit %s\n", commit.Hash)
 		}
 	}
 

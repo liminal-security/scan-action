@@ -13,6 +13,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/storer"
 )
 
 type Differ struct {
@@ -59,21 +60,22 @@ func readShallow(repoPath string) (commitsSHA []string, err error) {
 }
 
 func (d *Differ) Diff() (commits []Commit, err error) {
-	cIter, err := d.repo.Log(&git.LogOptions{All: true})
+	cIter, err := d.repo.Log(&git.LogOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("error creating commit iterator: %w", err)
 	}
 
 	err = cIter.ForEach(func(c *object.Commit) error {
+		// Stop before processing shallow end commits (boundary of shallow fetch)
+		if slices.Contains(d.shallowEnds, c.Hash.String()) {
+			return storer.ErrStop
+		}
+
 		commit := Commit{
 			Hash: c.Hash.String(),
 		}
-		diff := Diff{}
-		diff.Data = map[string]string{}
-
-		if slices.Contains(d.shallowEnds, c.Hash.String()) {
-			return nil
-		}
+		commitDiff := Diff{}
+		commitDiff.Data = map[string]string{}
 
 		commitTree, err := c.Tree()
 		if err != nil {
@@ -99,14 +101,18 @@ func (d *Differ) Diff() (commits []Commit, err error) {
 
 			var data string
 			chunks := p.Chunks()
-			for _, c := range chunks {
-				data += c.Content()
+			for _, chunk := range chunks {
+				// Scan both additions and deletions, but skip unchanged context lines
+				if chunk.Type() == diff.Add || chunk.Type() == diff.Delete {
+					data += chunk.Content()
+				}
 			}
 
-			diff.Data[filePath] = data
-			commit.Diff = diff
-			commits = append(commits, commit)
+			commitDiff.Data[filePath] = data
 		}
+
+		commit.Diff = commitDiff
+		commits = append(commits, commit)
 
 		return nil
 	})
