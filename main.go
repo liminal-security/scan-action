@@ -48,6 +48,10 @@ func main() { //nolint:funlen
 		os.Exit(255)
 	}
 
+	// Show token info (length only, not the actual token)
+	fmt.Printf("API Endpoint: %s\n", entroAPIEndpoint)
+	fmt.Printf("Token configured: yes (%d characters)\n", len(entroToken))
+
 	// Check if strict mode is enabled
 	failOnError := false
 	if failOnErrorStr := os.Getenv("ENTRO_FAIL_ON_ERROR"); failOnErrorStr == "true" {

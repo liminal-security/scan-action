@@ -77,6 +77,9 @@ Where `N` should equal the number of commits in your PR + 1 (not `--depth=1`).
 3. `fail-on-error` - Fail workflow on API errors (default: `false`)
    - `false` (default): Log errors and continue scanning other commits
    - `true`: Stop and fail the workflow on first API error
+4. `debug` - Enable debug logging (default: `false`)
+   - Logs request details and authorization header info (token length, prefix)
+   - Useful for troubleshooting 403 errors or API connectivity issues
 
 ### Example with Strict Mode:
 
@@ -90,5 +93,24 @@ If you want the workflow to fail when API errors occur (e.g., network issues, AP
     api-token: ${{ secrets.API_KEY }}
     fail-on-error: true  # Enable strict mode
 ```
+
+### Troubleshooting with Debug Mode:
+
+If you're getting 403 errors or want to verify the API token is being sent correctly:
+
+```yaml
+- name: 'Scan for secrets'
+  uses: liminal-security/scan-action@v1.0.2
+  with:
+    api-endpoint: ${{ secrets.API_ENDPOINT }}
+    api-token: ${{ secrets.API_KEY }}
+    debug: true  # Enable debug logging
+```
+
+This will show:
+- API endpoint being used
+- Token length (not the actual token)
+- First 10 characters of the token
+- Request URLs being called
 
 
