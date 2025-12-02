@@ -25,15 +25,39 @@ func main() { //nolint:funlen
 		os.Exit(255)
 	}
 
+	// Debug: Show all relevant environment variables
+	if os.Getenv("ENTRO_DEBUG") == "true" {
+		fmt.Println("Debug: Environment variables:")
+		for _, env := range []string{"ENTRO_API_ENDPOINT", "ENTRO_TOKEN", "ENTRO_FAIL_ON_ERROR", "ENTRO_DEBUG"} {
+			val, exists := os.LookupEnv(env)
+			if exists {
+				if env == "ENTRO_TOKEN" {
+					fmt.Printf("  %s: [SET] (length: %d)\n", env, len(val))
+				} else {
+					fmt.Printf("  %s: %s\n", env, val)
+				}
+			} else {
+				fmt.Printf("  %s: [NOT SET]\n", env)
+			}
+		}
+		fmt.Println()
+	}
+
 	// Validate configuration
 	getEnvVar := func(key string) string {
 		val, ok := os.LookupEnv(key)
-		if !ok || val == "" {
-			fmt.Printf("Error: %s is not set\n", key)
-			fmt.Printf("Add it to your workflow:\n")
-			fmt.Printf("  with:\n")
-			fmt.Printf("    api-endpoint: ${{ secrets.API_ENDPOINT }}\n")
-			fmt.Printf("    api-token: ${{ secrets.API_KEY }}\n")
+		if !ok {
+			fmt.Printf("Error: %s environment variable is not set\n", key)
+			fmt.Printf("This means the action.yml is not passing it correctly.\n")
+			os.Exit(255)
+		}
+		if val == "" {
+			fmt.Printf("Error: %s is empty\n", key)
+			fmt.Printf("Your GitHub secret exists but has no value, or the secret name doesn't match.\n")
+			fmt.Printf("\nCheck:\n")
+			fmt.Printf("  1. Secret exists in: Settings → Secrets and variables → Actions\n")
+			fmt.Printf("  2. Secret has a value (not empty)\n")
+			fmt.Printf("  3. Secret name in workflow matches exactly (case-sensitive)\n")
 			os.Exit(255)
 		}
 		return val
