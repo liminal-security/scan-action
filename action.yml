@@ -16,6 +16,10 @@ inputs:
     description: 'Enable debug logging to troubleshoot API issues'
     required: false
     default: 'false'
+  scan-generics:
+    description: 'Scan for generic secrets in addition to specific patterns'
+    required: false
+    default: 'false'
 runs:
   using: 'composite'
   steps:
@@ -31,6 +35,7 @@ runs:
         ENTRO_TOKEN: ${{ inputs.api-token }}
         ENTRO_FAIL_ON_ERROR: ${{ inputs.fail-on-error }}
         ENTRO_DEBUG: ${{ inputs.debug }}
+        ENTRO_SCAN_GENERICS: ${{ inputs.scan-generics }}
       run: |
         cd ${{ github.action_path }}
         go run . ${{ github.workspace }}

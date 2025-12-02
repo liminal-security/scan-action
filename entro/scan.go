@@ -37,6 +37,22 @@ func (c *Client) Scan(ctx context.Context, scanReq *ScanReq) (*ScanResp, error) 
 		panic(err)
 	}
 
+	// Add generic=true query parameter if enabled
+	if os.Getenv("ENTRO_SCAN_GENERICS") == "true" {
+		parsedURL, err := url.Parse(reqURL)
+		if err != nil {
+			return nil, fmt.Errorf("can't parse URL: %w", err)
+		}
+		query := parsedURL.Query()
+		query.Set("generic", "true")
+		parsedURL.RawQuery = query.Encode()
+		reqURL = parsedURL.String()
+
+		if os.Getenv("ENTRO_DEBUG") == "true" {
+			fmt.Println("Debug: Generic scanning enabled")
+		}
+	}
+
 	body := new(bytes.Buffer)
 	err = json.NewEncoder(body).Encode(scanReq)
 	if err != nil {

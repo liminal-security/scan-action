@@ -77,7 +77,10 @@ Where `N` should equal the number of commits in your PR + 1 (not `--depth=1`).
 3. `fail-on-error` - Fail workflow on API errors (default: `false`)
    - `false` (default): Log errors and continue scanning other commits
    - `true`: Stop and fail the workflow on first API error
-4. `debug` - Enable debug logging (default: `false`)
+4. `scan-generics` - Scan for generic secrets (default: `false`)
+   - `false` (default): Scan for specific secret patterns only
+   - `true`: Also scan for generic high-entropy strings and patterns
+5. `debug` - Enable debug logging (default: `false`)
    - Logs request details and authorization header info (token length, prefix)
    - Useful for troubleshooting 403 errors or API connectivity issues
 
@@ -93,6 +96,21 @@ If you want the workflow to fail when API errors occur (e.g., network issues, AP
     api-token: ${{ secrets.API_KEY }}
     fail-on-error: true  # Enable strict mode
 ```
+
+### Example with Generic Scanning:
+
+To detect generic secrets in addition to specific patterns (AWS keys, GitHub tokens, etc.):
+
+```yaml
+- name: 'Scan for secrets'
+  uses: liminal-security/scan-action@v1.0.2
+  with:
+    api-endpoint: ${{ secrets.API_ENDPOINT }}
+    api-token: ${{ secrets.API_KEY }}
+    scan-generics: true  # Enable generic secret detection
+```
+
+**Note:** Generic scanning may find more potential secrets but could also have more false positives.
 
 ### Troubleshooting with Debug Mode:
 
