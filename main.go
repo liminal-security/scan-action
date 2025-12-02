@@ -65,6 +65,20 @@ func main() { //nolint:funlen
 		os.Exit(1)
 	}
 
+	if len(commits) == 0 {
+		fmt.Println("⚠️  WARNING: No commits found to scan!")
+		fmt.Println("This usually means your checkout fetch-depth is too shallow.")
+		fmt.Println("Please follow the setup instructions in the README:")
+		fmt.Println("  https://github.com/liminal-security/scan-action#example")
+		fmt.Println()
+		fmt.Println("You need to:")
+		fmt.Println("  1. Calculate PR commit count: PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))")
+		fmt.Println("  2. Use it in checkout: fetch-depth: ${{ env.PR_FETCH_DEPTH }}")
+		os.Exit(0)
+	}
+
+	fmt.Printf("Found %d commit(s) to scan\n", len(commits))
+
 	for _, commit := range commits {
 		fmt.Printf("Scanning commit %s\n", commit.Hash)
 		r := &entro.ScanReq{
